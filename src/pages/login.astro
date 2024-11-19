@@ -1,0 +1,41 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getSession } from "auth-astro/server";
+const session = await getSession(Astro.request);
+import { SignIn, SignOut } from "auth-astro/components";
+---
+
+<Layout title="Login | JDM Social Network">
+  <h1>Login</h1>
+
+  <form id="loginForm">
+    <div>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit">Login</button>
+  </form>
+
+  <p id="loginMessage"></p>
+  <h4>---or---</h4>
+
+  {
+    session ? (
+      <>
+        <p>Hola {session.user?.email}</p>
+        <h5>Tu nombre es {session.user?.name}</h5>
+        <SignOut>Cerrar Sesión</SignOut>
+      </>
+    ) : (
+      <>
+			<SignIn class={"bg-primary text-primary-foreground shadow hover:bg-primary/90 h-10 rounded-md px-8"} provider="github">
+				Iniciar sesión con GitHub
+			</SignIn>
+      </>
+    )
+  }
+</Layout>

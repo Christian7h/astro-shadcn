@@ -1,165 +1,184 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Chart } from "../components/Chart";
+import { getSession } from "auth-astro/server";
+import { db, User, Role, Post, PostImage, Comment, eq } from "astro:db";
+const session = await getSession(Astro.request);
+
+// Obtener publicaciones con la información del usuario
+const dbPosts = await db
+  .select()
+  .from(Post)
+  .innerJoin(PostImage, eq(Post.id, PostImage.postId))
+  .innerJoin(Comment, eq(Post.id, Comment.postId))
+  .innerJoin(User, eq(Post.userId, User.id));
+
+// Obtener comentarios con la información del usuario
+const dbComments = await db
+  .select()
+  .from(Comment)
+  .innerJoin(User, eq(Comment.userId, User.id));
 ---
 
 <Layout title="Astro + shadcn/ui">
-	<section class="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32">
-		<div class="max-w-[64rem] flex flex-col items-center gap-4 text-center mx-auto">
-			<h1
-				class="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl"
-			>
-				Build beautiful websites with Astro 5 and shadcn/ui
-			</h1>
-			<p
-				class="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8"
-			>
-				A beautiful, modern website template built with Astro and
-				shadcn/ui. Featuring dark mode, responsive design, and great
-				typography.
-			</p>
-			<div class="space-x-4">
-				<a
-					href="https://ui.shadcn.com"
-					class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
-				>
-					Documentation
-				</a>
-				<a
-					href="https://github.com/agentc-app/astro-shadcn"
-					class="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-				>
-					GitHub
-				</a>
-			</div>
-		</div>
-	</section>
+  {
+    session ? (
+      <h1>¡Bienvenido, {session.user?.name}! 🚗💨</h1>
+    ) : (
+      <h1>¡Bienvenido a JDM Social Network! 🚗💨</h1>
+    )
+  }
 
-	<section class="space-y-6 py-8 md:py-12 lg:py-24">
-		<Chart client:load />
-	</section>
+  <p class="text-center text-white">¡Conéctate con entusiastas del JDM de todo el mundo!</p>
 
-	<section class="space-y-6 py-8 md:py-12 lg:py-24">
-		<div class="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-			<p
-				class="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7"
-			>
-				Optimized for the best possible performance and accessibility
-			</p>
-		</div>
-		<div class="mx-auto grid max-w-4xl gap-6 sm:grid-cols-2 md:grid-cols-4 items-start">
-			<div
-				class="relative overflow-hidden rounded-lg border bg-background p-2"
-			>
-				<div
-					class="flex h-[150px] flex-col items-center justify-center rounded-md p-6 text-center"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="h-12 w-12 mb-4 text-green-500"
-						><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg
-					>
-					<div class="space-y-2">
-						<h3 class="font-bold text-2xl">100</h3>
-						<p class="text-sm text-muted-foreground">Performance</p>
-					</div>
-				</div>
-			</div>
+  <div class="posts-container">
+    {
+      dbPosts.map(({ Post, User, PostImage }) => (
+        <article id={`post-${Post.id}`} class="post">
+          <header>
+            <div class="user-info">
+              <strong>@{User.username}</strong>
+              <span class="timestamp">
+                {new Date(Post.createdAt).toLocaleString()}
+              </span>
+            </div>
+          </header>
 
-			<div
-				class="relative overflow-hidden rounded-lg border bg-background p-2"
-			>
-				<div
-					class="flex h-[150px] flex-col items-center justify-center rounded-md p-6 text-center"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="h-12 w-12 mb-4 text-green-500"
-						><circle cx="12" cy="12" r="10"></circle><path
-							d="m9 12 2 2 4-4"></path></svg
-					>
-					<div class="space-y-2">
-						<h3 class="font-bold text-2xl">100</h3>
-						<p class="text-sm text-muted-foreground">
-							Accessibility
-						</p>
-					</div>
-				</div>
-			</div>
-
-			<div
-				class="relative overflow-hidden rounded-lg border bg-background p-2"
-			>
-				<div
-					class="flex h-[150px] flex-col items-center justify-center rounded-md p-6 text-center"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="h-12 w-12 mb-4 text-green-500"
-						><path
-							d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"
-						></path></svg
-					>
-					<div class="space-y-2">
-						<h3 class="font-bold text-2xl">100</h3>
-						<p class="text-sm text-muted-foreground">
-							Best Practices
-						</p>
-					</div>
-				</div>
-			</div>
-
-			<div
-				class="relative overflow-hidden rounded-lg border bg-background p-2"
-			>
-				<div
-					class="flex h-[150px] flex-col items-center justify-center rounded-md p-6 text-center"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="h-12 w-12 mb-4 text-green-500"
-						><path
-							d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-						></path><line x1="4" y1="22" x2="4" y2="15"></line></svg
-					>
-					<div class="space-y-2">
-						<h3 class="font-bold text-2xl">100</h3>
-						<p class="text-sm text-muted-foreground">SEO</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+          <p class="post-content">{Post.content}</p>
+          <img
+            class="post-image"
+            src={PostImage.imageUrl}
+            width="565"
+            height="330"
+            alt="Post image"
+          />
+          <footer>
+            <div class="comments">
+              <h3>Comentarios:</h3>
+              {dbComments
+                .filter((comment) => comment.Comment.postId === Post.id)
+                .map(({ Comment, User }) => (
+                  <div class="comment">
+                    <strong>@{User.username}:</strong>
+                    <p>{Comment.content}</p>
+                    <span class="comment-time">
+                      {new Date(Comment.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </footer>
+        </article>
+      ))
+    }
+  </div>
 </Layout>
+
+<style>
+  h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin: 1rem 0;
+    color: #ffffff;
+    text: wrap;
+  }
+
+  .posts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin: 2rem auto;
+    max-width: 700px;
+    font-family: "Arial", sans-serif;
+  }
+
+  .post {
+    background: #4cb7e1;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .post:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .post header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+  }
+
+  .user-info strong {
+    color: #555;
+    font-size: 1.2rem;
+  }
+
+  .timestamp {
+    margin-top: 1rem;
+    color: #ffff;
+    font-size: 0.8rem;
+  }
+
+  .post-content {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .post-image {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 1rem;
+    object-fit: cover;
+  }
+
+  footer {
+    margin-top: 2rem;
+    border-top: 1px solid #ddd;
+    padding-top: 1rem;
+  }
+
+  .comments {
+    margin-top: 1rem;
+  }
+
+  .comments h3 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .comment {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .comment strong {
+    color: #444;
+    font-size: 1rem;
+  }
+
+  .comment p {
+    font-size: 0.95rem;
+    color: #333;
+  }
+
+  .comment-time {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #888;
+  }
+</style>
